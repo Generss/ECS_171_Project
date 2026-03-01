@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Steam % Liked Predictor</title>
+
+  <!-- Google-ish font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #f6f8fc;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: rgba(17,24,39,.10);
+      --shadow: 0 6px 18px rgba(17,24,39,.08);
+      --shadow2: 0 10px 30px rgba(17,24,39,.10);
+      --blue: #1a73e8;
+      --blue2: #1967d2;
+      --chip: #eef3fd;
+      --danger: #b00020;
+      --radius: 16px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(26,115,232,.10), transparent 55%),
+                  radial-gradient(1200px 600px at 80% 0%, rgba(25,103,210,.08), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .wrap{
+      max-width: 1060px;
+      margin: 32px auto;
+      padding: 0 18px 40px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:40px; height:40px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(26,115,232,.95), rgba(25,103,210,.85));
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:10px;
+      border-radius:10px;
+      background: rgba(255,255,255,.92);
+      clip-path: polygon(0 35%, 55% 35%, 55% 0, 100% 50%, 55% 100%, 55% 65%, 0 65%);
+      opacity:.95;
+    }
+    h1{
+      font-size: 22px;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .pillinfo{
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      box-shadow: 0 1px 0 rgba(17,24,39,.03);
+      backdrop-filter: blur(8px);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+    }
+    @media (max-width: 940px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .card h2{
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+    .card p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .seg{
+      display:flex;
+      background: rgba(26,115,232,.06);
+      border: 1px solid rgba(26,115,232,.15);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+      margin-top: 12px;
+    }
+    .seg button{
+      border: 0;
+      background: transparent;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: rgba(31,41,55,.85);
+      cursor: pointer;
+      flex: 1;
+      transition: background .15s ease, color .15s ease;
+    }
+    .seg button.active{
+      background: #fff;
+      color: var(--blue2);
+      box-shadow: 0 2px 10px rgba(26,115,232,.10);
+    }
+
+    .section-title{
+      display:flex; align-items:center; justify-content:space-between;
+      margin: 14px 0 10px;
+    }
+    .section-title .label{
+      font-weight: 700;
+      font-size: 13px;
+      color: rgba(31,41,55,.92);
+    }
+    .section-title .hint{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .fields{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 640px){
+      .fields{ grid-template-columns: 1fr; }
+    }
+    .field label{
+      display:block;
+      font-size: 12px;
+      color: rgba(31,41,55,.85);
+      font-weight: 600;
+      margin: 0 0 6px;
+    }
+    .control{
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      outline: none;
+      transition: border .15s ease, box-shadow .15s ease;
+      font-size: 14px;
+    }
+    .control:focus{
+      border-color: rgba(26,115,232,.55);
+      box-shadow: 0 0 0 4px rgba(26,115,232,.12);
+    }
+    .meta{
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+    .grow{ flex: 1; min-width: 240px; }
+
+    .btn{
+      border: 1px solid rgba(26,115,232,.22);
+      background: rgba(26,115,232,.08);
+      color: var(--blue2);
+      font-weight: 700;
+      padding: 11px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background .15s ease, transform .02s ease;
+      user-select: none;
+    }
+    .btn:hover{ background: rgba(26,115,232,.12); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.primary{
+      background: var(--blue);
+      color: #fff;
+      border-color: rgba(26,115,232,.30);
+      box-shadow: 0 12px 24px rgba(26,115,232,.18);
+    }
+    .btn.primary:hover{ background: var(--blue2); }
+
+    .btn.ghost{
+      background: #fff;
+      border-color: var(--border);
+      color: rgba(31,41,55,.9);
+    }
+
+    .chips{
+      margin-top: 10px;
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 30px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: var(--chip);
+      border: 1px solid rgba(26,115,232,.16);
+      font-size: 12px;
+      color: rgba(31,41,55,.92);
+    }
+    .chip button{
+      border: 0;
+      background: rgba(26,115,232,.14);
+      color: var(--blue2);
+      width: 20px; height: 20px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+    }
+    .chip button:hover{ background: rgba(26,115,232,.20); }
+
+    textarea{
+      min-height: 140px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      white-space: pre;
+    }
+    .mono{
+      background: rgba(17,24,39,.04);
+      border: 1px solid rgba(17,24,39,.08);
+      padding: 10px 12px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 12px;
+      color: rgba(31,41,55,.92);
+      margin-top: 10px;
+    }
+
+    .footerbar{
+      margin-top: 16px;
+      display:flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+
+  <script>
+    function setMode(mode) {
+      document.getElementById("formMode").style.display = (mode === "form") ? "block" : "none";
+      document.getElementById("csvMode").style.display  = (mode === "csv")  ? "block" : "none";
+      document.getElementById("modeInput").value = mode;
+
+      document.getElementById("btnForm").classList.toggle("active", mode === "form");
+      document.getElementById("btnCsv").classList.toggle("active", mode === "csv");
+    }
+
+    // One-hot selection state
+    const selected = new Set();
+
+    function syncHidden() {
+      document.getElementById("selected_onehots").value = Array.from(selected).join(",");
+    }
+
+    function renderSelected() {
+      const container = document.getElementById("chips");
+      container.innerHTML = "";
+      syncHidden();
+
+      if (selected.size === 0) {
+        container.innerHTML = `<span style="color:#6b7280;font-size:12px;">No categories selected.</span>`;
+        return;
+      }
+
+      Array.from(selected).sort().forEach((name) => {
+        const el = document.createElement("span");
+        el.className = "chip";
+        el.textContent = name;
+
+        const x = document.createElement("button");
+        x.type = "button";
+        x.title = "Remove";
+        x.textContent = "×";
+        x.onclick = () => { selected.delete(name); renderSelected(); };
+
+        el.appendChild(x);
+        container.appendChild(el);
+      });
+    }
+
+    function addOneHot() {
+      const dd = document.getElementById("onehotDropdown");
+      const val = dd.value;
+      if (!val) return;
+      selected.add(val);
+      renderSelected();
+    }
+
+    function clearOneHots() {
+      selected.clear();
+      renderSelected();
+    }
+
+    function filterDropdown() {
+      const q = document.getElementById("onehotSearch").value.toLowerCase();
+      const dd = document.getElementById("onehotDropdown");
+      const opts = dd.querySelectorAll("option[data-oh='1']");
+      let shown = 0;
+      opts.forEach(o => {
+        const ok = o.value.toLowerCase().includes(q);
+        o.style.display = ok ? "" : "none";
+        if (ok) shown++;
+      });
+      document.getElementById("ohShown").textContent = shown.toString();
+    }
+
+    window.onload = () => {
+      setMode("form");
+      renderSelected();
+      filterDropdown();
+    };
+  </script>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Steam % Liked Predictor</h1>
+          <div class="subtitle">Local model demo • Flask + scikit-learn pipeline</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Main panel -->
+      <div class="card">
+        <h2>Make a prediction</h2>
+        <p>
+          Use the guided form for common features, or switch to CSV mode to paste/upload rows.
+          One-hot categories (tags/genres/etc.) can be added via dropdown and will be set to <b>1</b>.
+        </p>
+
+        <div class="seg" role="tablist" aria-label="Input mode">
+          <button id="btnForm" class="active" type="button" onclick="setMode('form')">Guided input</button>
+          <button id="btnCsv" type="button" onclick="setMode('csv')">CSV row</button>
+        </div>
+
+        <form method="POST" action="/predict" enctype="multipart/form-data" style="margin-top: 14px;">
+          <input type="hidden" id="modeInput" name="mode" value="form">
+          <input type="hidden" id="selected_onehots" name="selected_onehots" value="">
+
+          <!-- Guided mode -->
+          <div id="formMode">
+            <div class="section-title">
+              <div class="label">Basic numeric fields</div>
+              <div class="hint">Leave blank to use median imputation</div>
+            </div>
+
+            <div class="fields">
+              {% for c in form_fields %}
+                <div class="field">
+                  <label for="{{ c }}">{{ c }}</label>
+                  <input
+                    class="control"
+                    type="number"
+                    step="any"
+                    name="{{ c }}"
+                    id="{{ c }}"
+                    placeholder="{% if ui_stats.get(c) %}median={{ ui_stats[c]['median'] }}{% else %}optional{% endif %}"
+                  >
+                  {% if ui_stats.get(c) %}
+                    <div class="meta">min={{ ui_stats[c]['min'] }}, max={{ ui_stats[c]['max'] }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="section-title" style="margin-top: 16px;">
+              <div class="label">One-hot categories</div>
+              <div class="hint">
+                Showing <b id="ohShown">0</b> of {{ onehot_dropdown_count }} common categories
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="grow">
+                <label for="onehotSearch" style="font-size:12px;font-weight:600;color:rgba(31,41,55,.85);display:block;margin-bottom:6px;">
+                  Search categories
+                </label>
+                <input class="control" id="onehotSearch" type="text" placeholder="Type to filter (e.g., tag_action, genre_rpg)" oninput="filterDropdown()">
+                <div class="meta">Tip: filter fast if you have lots of categories.</div>
+              </div>
+
+              <div class="grow">
+                <label for="onehotDropdown" style="font-size:12px;font-weight:600;color:rgba(31,41,55,.85);display:block;margin-bottom:6px;">
+                  Select a category to set to 1
+                </label>
+                <select class="control" id="onehotDropdown">
+                  <option value="">— Select —</option>
+                  {% for c in onehot_dropdown %}
+                    <option data-oh="1" value="{{ c }}">{{ c }}</option>
+                  {% endfor %}
+                </select>
+                <div class="meta">Then click “Add”. You can add multiple.</div>
+              </div>
+
+              <div style="display:flex; gap:10px; align-items:end;">
+                <button class="btn" type="button" onclick="addOneHot()">Add</button>
+                <button class="btn ghost" type="button" onclick="clearOneHots()">Clear</button>
+              </div>
+            </div>
+
+            <div class="chips" id="chips"></div>
+          </div>
+
+          <!-- CSV mode -->
+          <div id="csvMode" style="display:none;">
+            <div class="section-title">
+              <div class="label">Paste CSV (header required)</div>
+              <div class="hint">You can supply only a few columns; the rest will be filled</div>
+            </div>
+
+            <div class="mono">Example:
+<pre style="margin:8px 0 0;">price,owners,required_age
+9.99,50000,0</pre>
+            </div>
+
+            <label for="csv_text" style="font-size:12px;font-weight:600;color:rgba(31,41,55,.85);display:block;margin:12px 0 6px;">
+              Paste CSV here (optional)
+            </label>
+            <textarea class="control" name="csv_text" id="csv_text"
+              placeholder="header1,header2,...&#10;value1,value2,..."></textarea>
+
+            <div class="section-title" style="margin-top: 12px;">
+              <div class="label">Or upload a CSV file</div>
+              <div class="hint">Multiple rows supported</div>
+            </div>
+            <input class="control" type="file" name="csv_file" accept=".csv" />
+          </div>
+
+          <div class="footerbar">
+            <button class="btn ghost" type="reset" onclick="clearOneHots(); setMode('form');">Reset</button>
+            <button class="btn primary" type="submit">Predict</button>
+          </div>
+        </form>
+      </div>
+
+
+    </div>
+  </div>
+</body>
+</html>
